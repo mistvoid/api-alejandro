@@ -1,0 +1,55 @@
+name: CI - Test Serverless Offline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Serverless Offline
+        run: npm install -g serverless serverless-offline
+
+      - name: Run Serverless Offline in background
+        run: |
+          npx serverless offline start &
+          sleep 10   # esperar a que arranque
+
+      - name: Test API with curl
+        run: |
+          # Crear producto
+          curl -X POST http://localhost:3000/dev/products \
+            -H "Content-Type: application/json" \
+            -d '{"id":"1","nombre":"Portátil Test","descripcion":"CI/CD","precio":999}' \
+            && echo "✅ Create OK"
+          # Listar
+          curl http://localhost:3000/dev/products | grep "Portátil Test" \
+            && echo "✅ List OK"
+          # Actualizar
+          curl -X PUT http://localhost:3000/dev/products/1 \
+            -H "Content-Type: application/json" \
+            -d '{"nombre":"Portátil Actualizado","descripcion":"Test","precio":1099}' \
+            && echo "✅ Update OK"
+          # Eliminar
+          curl -X DELETE http://localhost:3000/dev/products/1 \
+            && echo "✅ Delete OK"
+
+      - name: Upload logs (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serverless-logs
+          path: ~/.serverless/
