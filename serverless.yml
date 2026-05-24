@@ -1,0 +1,55 @@
+service: api-alejandro
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    PRODUCTS_TABLE: ${self:service}-products-${opt:stage, 'dev'}
+
+functions:
+  createProduct:
+    handler: handler.createProduct
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
+  getProducts:
+    handler: handler.getProducts
+    events:
+      - http:
+          path: products
+          method: get
+          cors: true
+  getProductById:
+    handler: handler.getProductById
+    events:
+      - http:
+          path: products/{id}
+          method: get
+          cors: true
+  updateProduct:
+    handler: handler.updateProduct
+    events:
+      - http:
+          path: products/{id}
+          method: put
+          cors: true
+  deleteProduct:
+    handler: handler.deleteProduct
+    events:
+      - http:
+          path: products/{id}
+          method: delete
+          cors: true
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3000
+    lambdaPort: 3002
+    noAuth: true
+    host: 0.0.0.0

@@ -1,0 +1,5 @@
+node_modules/
+products.json
+.env
+.DS_Store
+serverless/.serverless/
